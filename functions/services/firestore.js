@@ -7,16 +7,18 @@ const champDoc = db.collection('in-season-cup').doc('current-champion');
 const userRef = db.collection('users');
 const historyRef = db.collection('history');
 
-const setChampionDB = async (teamId) => {
+const setChampion = async ({ teamId, name }) => {
   champDoc.set({
     teamId,
+    name,
     lastUpdateDate: admin.firestore.Timestamp.now(),
   });
 };
 
-const updateChampionDB = async (teamId) => {
+const updateChampion = async ({ name, teamId }) => {
   champDoc.update({
     teamId,
+    name,
     lastUpdateDate: admin.firestore.Timestamp.now(),
   });
 };
@@ -26,6 +28,7 @@ const getCurrentChampion = async () => {
   return {
     exists: doc.exists,
     teamId: doc.data()?.teamId || null,
+    name: doc.data()?.name || null,
   };
 };
 
@@ -61,12 +64,12 @@ const setMatchHistory = async (info) => {
 };
 
 module.exports = {
-  updateChampionDB,
+  updateChampion,
   getCurrentChampion,
   getUsersWithTeam,
   incrementAllUserScores,
   listUserDocs,
   setUserDocs,
-  setChampionDB,
+  setChampion,
   setMatchHistory,
 };

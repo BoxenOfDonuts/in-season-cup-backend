@@ -1,111 +1,44 @@
-// The Cloud Functions for Firebase SDK to create Cloud Functions and set up triggers.
-// make this easier
-
 const functions = require('firebase-functions');
-
-// The Firebase Admin SDK to access Firestore.
-// const admin = require('firebase-admin');
-
-// admin.initializeApp();
-
 const { champ, users } = require('./scripts/data');
+const { getData } = require('./services/nhl');
 const {
-  updateChampionDB,
+  updateChampion,
   getCurrentChampion,
   getUsersWithTeam,
   incrementAllUserScores,
   listUserDocs,
   setUserDocs,
-  setChampionDB,
+  setChampion,
   setMatchHistory,
 } = require('./services/firestore');
 
 const { log } = functions.logger;
-// const db = admin.firestore();
 
-const updateChampion = functions.https.onRequest(async (req, res) => {
-  // get the id of the current champion
+const updateChampionDaily = functions.https.onRequest(async (req, res) => {
   const doc = await getCurrentChampion();
 
   if (!doc.exists) return res.json({ error: 'no current champion' });
 
-  const currentChampion = doc.teamId;
-  const didPlay = await didPlayYesterday(currentChampion);
+  const currentChampion = { teamId: doc.teamId, name: doc.name };
+  const { champion, opponent, didPlay, date } = await getData(currentChampion);
+
+  await setMatchHistory({ champion, opponent, date });
+
   if (!didPlay) {
-    await updateChampionDB(currentChampion);
+    await updateChampion(currentChampion);
     return res.json({ message: 'did not play, existing champ stays' });
   }
 
-  const data = await getGameResults(currentChampion);
-  const champTravel = getTravel(data, currentChampion);
-  const opponentTravel = champTravel === 'home' ? 'away' : 'home';
-  const scores = getScores(data);
-
-  const championScore = scores[champTravel];
-  const opponentScore = scores[opponentTravel];
-
-  if (championScore < opponentScore) {
-    const newChamptionId = getOpponentId(data, opponentTravel);
-    log('New Champion!', { id: newChamptionId });
-    await updateChampionDB(newChamptionId);
-    return res.json({ result: currentChampion, newChamptionId });
+  if (champion.score < opponent.score) {
+    const { teamId, name } = opponent;
+    log('New Champion!', { teamId, name });
+    await updateChampion({ teamId, name });
+    return res.json({ result: currentChampion, teamId });
   }
   log('Existing Champ stays!');
-  await updateChampionDB(currentChampion);
+  await updateChampion(currentChampion);
   return res.json({ message: 'Existing Champ Wins!' });
 });
-
-const getGameResults = async (teamId) => {
-  const ROOT = 'https://statsapi.web.nhl.com/api/v1/teams';
-  const queryParams = new URLSearchParams({
-    expand: 'team.schedule.previous',
-    gameType: 'R',
-  });
-  const url = `${ROOT}/${teamId}?${queryParams}`;
-  const response = await fetch(url);
-  return response.json();
-};
-
-const getTravel = (data, currentChampion) =>
-  data.teams[0].previousGameSchedule.dates[0].games[0].teams.home.team.id ===
-  currentChampion
-    ? 'home'
-    : 'away';
-
-const getScores = (data) => {
-  const homeTeamScore =
-    data.teams[0].previousGameSchedule.dates[0].games[0].teams.home.score;
-  const awayTeamScore =
-    data.teams[0].previousGameSchedule.dates[0].games[0].teams.away.score;
-
-  return {
-    home: homeTeamScore,
-    away: awayTeamScore,
-  };
-};
-
-const getSchedule = async (teamId) => {
-  const ROOT = 'https://statsapi.web.nhl.com/api/v1/schedule';
-  const queryParams = new URLSearchParams({
-    teamId,
-    expand: 'schedule.brodcasts',
-    startDate: '2022-12-18',
-    endDate: '2022-12-18',
-    gameType: 'R',
-  });
-  const url = `${ROOT}?${queryParams}`;
-  const response = await fetch(url);
-  return response.json();
-};
-
-const didPlayYesterday = async (teamId) => {
-  const data = await getSchedule(teamId);
-
-  return Boolean(data.totalGames);
-};
-
-const getOpponentId = (data, travel) =>
-  data.teams[0].previousGameSchedule.dates[0].games[0].teams[travel].team.id;
 
 const addPoints = functions.firestore
   .document('/in-season-cup/current-champion')
@@ -125,7 +58,7 @@ const updateData = functions.https.onRequest(async (req, res) => {
 
   if (!docs.length) {
     setUserDocs(users);
-    setChampionDB(champ.teamId);
+    setChampion(champ);
   } else {
     return res.json({ message: 'data exists' });
   }
@@ -134,7 +67,7 @@ const updateData = functions.https.onRequest(async (req, res) => {
 });
 
 module.exports = {
-  updateChampion,
+  updateChampionDaily,
   addPoints,
   updateData,
 };

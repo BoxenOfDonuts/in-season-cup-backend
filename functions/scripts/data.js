@@ -13,6 +13,7 @@ const users = [
 
 const champ = {
   teamId: 14,
+  name: 'Tampa Bay Lightning',
 };
 
 module.exports = {
