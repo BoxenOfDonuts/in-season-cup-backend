@@ -76,7 +76,9 @@ const fillHistory = functions.https.onRequest(async (req, res) => {
   let day = dayjs('2022-10-10');
 
   while (!day.isSame(dayjs('2022-12-19'))) {
-    await new Promise((r) => setTimeout(r, 500));
+    await new Promise((r) => {
+      setTimeout(r, 500);
+    });
 
     day = dayjs(day).add(1, 'day');
     const doc = await getCurrentChampion();
@@ -91,16 +93,13 @@ const fillHistory = functions.https.onRequest(async (req, res) => {
       await updateChampion(currentChampion);
       const message = 'did not play, existing champ stays';
       log(message);
-      continue;
-    }
-
-    if (champion.score < opponent.score) {
+    } else if (champion.score < opponent.score) {
       log('New Champion!', opponent);
       await updateChampion(opponent);
-      continue;
+    } else {
+      log('Existing Champ Won!');
+      await updateChampion(currentChampion);
     }
-    log('Existing Champ Won!');
-    await updateChampion(currentChampion);
   }
   return res.json({ message: 'done!' });
 });

@@ -92,8 +92,8 @@ const getData = async ({ teamId, name }) => {
 };
 
 const getDataByDate = async ({ teamId, name }, yesterday) => {
-  yesterday = dayjs(yesterday).format(DATE_FORMAT);
-  const data = await getSchedule(teamId, yesterday);
+  const day = dayjs(yesterday).format(DATE_FORMAT);
+  const data = await getSchedule(teamId, day);
   const didPlay = Boolean(data.totalGames);
   // get gametype of P ? seasons over bby
   if (didPlay) {
@@ -106,14 +106,14 @@ const getDataByDate = async ({ teamId, name }, yesterday) => {
       champion,
       opponent,
       didPlay,
-      date: yesterday,
+      date: day,
     };
   }
   return {
     champion: { teamId, name },
     opponent: { teamId: null, name: null },
     didPlay,
-    date: yesterday,
+    date: day,
   };
 };
 
