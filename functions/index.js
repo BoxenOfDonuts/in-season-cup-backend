@@ -15,36 +15,39 @@ import {
 
 const { log } = functions.logger;
 
-const updateChampionDaily = functions.https.onRequest(async (req, res) => {
-  const doc = await getCurrentChampion();
+const updateChampionDaily = functions.pubsub
+  .topic('for-the-cup')
+  .onPublish(async () => {
+    const doc = await getCurrentChampion();
 
-  if (!doc.exists) {
-    const message = 'no current champion';
-    log(message);
-    return res.json({ error: message });
-  }
+    if (!doc.exists) {
+      const message = 'no current champion';
+      log(message);
+      return;
+    }
 
-  const currentChampion = { teamId: doc.teamId, name: doc.name };
-  const { champion, opponent, didPlay, date } = await getData(currentChampion);
+    const currentChampion = { teamId: doc.teamId, name: doc.name };
+    const { champion, opponent, didPlay, date } = await getData(
+      currentChampion
+    );
 
-  await setMatchHistory({ champion, opponent, date });
+    await setMatchHistory({ champion, opponent, date });
 
-  if (!didPlay) {
+    if (!didPlay) {
+      await updateChampion(currentChampion);
+      const message = 'did not play, existing champ stays';
+      log(message);
+      return;
+    }
+
+    if (champion.score < opponent.score) {
+      log('New Champion!', opponent);
+      await updateChampion(opponent);
+      return;
+    }
+    log('Existing Champ Won!');
     await updateChampion(currentChampion);
-    const message = 'did not play, existing champ stays';
-    log(message);
-    return res.json({ message });
-  }
-
-  if (champion.score < opponent.score) {
-    log('New Champion!', opponent);
-    await updateChampion(opponent);
-    return res.json({ result: currentChampion, teamId: opponent.teamId });
-  }
-  log('Existing Champ Won!');
-  await updateChampion(currentChampion);
-  return res.json({ message: 'Existing Champ Won!' });
-});
+  });
 
 const addPoints = functions.firestore
   .document('/in-season-cup/current-champion')
