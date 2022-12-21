@@ -1,8 +1,8 @@
-const functions = require('firebase-functions');
-const dayjs = require('dayjs');
-const { champ, users } = require('./scripts/data');
-const { getData, getDataByDate } = require('./services/nhl');
-const {
+import functions from 'firebase-functions';
+import dayjs from 'dayjs';
+import { champ, users } from './scripts/data.js';
+import { getData, getDataByDate } from './services/nhl.js';
+import {
   updateChampion,
   getCurrentChampion,
   getUsersWithTeam,
@@ -11,7 +11,7 @@ const {
   setUserDocs,
   setChampion,
   setMatchHistory,
-} = require('./services/firestore');
+} from './services/firestore.js';
 
 const { log } = functions.logger;
 
@@ -104,9 +104,4 @@ const fillHistory = functions.https.onRequest(async (req, res) => {
   return res.json({ message: 'done!' });
 });
 
-module.exports = {
-  updateChampionDaily,
-  addPoints,
-  updateData,
-  fillHistory,
-};
+export { updateChampionDaily, addPoints, updateData, fillHistory };

@@ -1,5 +1,6 @@
 // The Firebase Admin SDK to access Firestore.
-const admin = require('firebase-admin');
+// const admin = require('firebase-admin');
+import admin from 'firebase-admin';
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -63,7 +64,7 @@ const setMatchHistory = async (info) => {
   historyRef.doc().set(info);
 };
 
-module.exports = {
+export {
   updateChampion,
   getCurrentChampion,
   getUsersWithTeam,

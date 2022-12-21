@@ -1,5 +1,6 @@
 /* eslint-disable arrow-body-style */
-const dayjs = require('dayjs');
+import dayjs from 'dayjs';
+import fetch from 'node-fetch';
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
@@ -117,7 +118,4 @@ const getDataByDate = async ({ teamId, name }, yesterday) => {
   };
 };
 
-module.exports = {
-  getData,
-  getDataByDate,
-};
+export { getData, getDataByDate };

@@ -16,10 +16,7 @@ const champ = {
   name: 'Colorado Avalanche',
 };
 
-module.exports = {
-  users,
-  champ,
-};
+export { users, champ };
 
 // const arr = [
 //     {
