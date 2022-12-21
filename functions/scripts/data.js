@@ -1,19 +1,19 @@
 const users = [
   {
     name: 'Joel',
-    points: 44,
+    points: 0,
     teams: [21, 29, 19, 23, 15, 53, 20, 2, 14, 10, 22, 13, 5, 7, 28, 30],
   },
   {
     name: 'Lian',
-    points: 24,
+    points: 0,
     teams: [16, 6, 8, 1, 24, 4, 54, 12, 52, 26, 55, 18, 3, 17, 9, 25],
   },
 ];
 
 const champ = {
-  teamId: 14,
-  name: 'Tampa Bay Lightning',
+  teamId: 21,
+  name: 'Colorado Avalanche',
 };
 
 module.exports = {

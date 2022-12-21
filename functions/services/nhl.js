@@ -91,6 +91,33 @@ const getData = async ({ teamId, name }) => {
   };
 };
 
+const getDataByDate = async ({ teamId, name }, yesterday) => {
+  yesterday = dayjs(yesterday).format(DATE_FORMAT);
+  const data = await getSchedule(teamId, yesterday);
+  const didPlay = Boolean(data.totalGames);
+  // get gametype of P ? seasons over bby
+  if (didPlay) {
+    const champTravel = getTravel(data, teamId);
+    const opponentTravel = champTravel === 'home' ? 'away' : 'home';
+    const scores = getScores(data);
+    const champion = scores[champTravel];
+    const opponent = scores[opponentTravel];
+    return {
+      champion,
+      opponent,
+      didPlay,
+      date: yesterday,
+    };
+  }
+  return {
+    champion: { teamId, name },
+    opponent: { teamId: null, name: null },
+    didPlay,
+    date: yesterday,
+  };
+};
+
 module.exports = {
   getData,
+  getDataByDate,
 };
